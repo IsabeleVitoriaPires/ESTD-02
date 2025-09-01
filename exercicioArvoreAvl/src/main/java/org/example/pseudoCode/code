@@ -1,0 +1,78 @@
+FUNÇÃO ALTURA(nó):
+    SE nó = NULO ENTAO RETORNA 0
+    SENAO RETORNA nó.altura
+
+FUNÇÃO ATUALIZA_ALTURA(nó):
+    nó.altura ← 1 + MÁX(ALTURA(nó.esq), ALTURA(nó.dir))
+
+
+
+FUNÇÃO FATOR_BAL(nó):
+    RETORNA ALTURA(nó.esq) − ALTURA(nó.dir)
+
+
+
+FUNÇÃO ROT_DIR(y):              // Rotação à direita (LL)
+    x ← y.esq
+    T2 ← x.dir
+    x.dir ← y
+    y.esq ← T2
+    ATUALIZA_ALTURA(y)
+    ATUALIZA_ALTURA(x)
+    RETORNA x
+
+
+FUNÇÃO ROT_ESQ(x):              // Rotação à esquerda (RR)
+    y ← x.dir
+    T2 ← y.esq
+    y.esq ← x
+    x.dir ← T2
+    ATUALIZA_ALTURA(x)
+    ATUALIZA_ALTURA(y)
+    RETORNA y
+
+
+FUNÇÃO INSERIR(raiz, chave):
+    // 1) Inserção BST padrão
+    SE raiz = NULO ENTAO
+        NOVO ← NÓ(chave)
+        NOVO.esq ← NULO; NOVO.dir ← NULO; NOVO.altura ← 1
+        RETORNA NOVO
+    FIMSE
+
+    SE chave < raiz.valor ENTAO
+        raiz.esq ← INSERIR(raiz.esq, chave)
+    SENAO SE chave > raiz.valor ENTAO
+        raiz.dir ← INSERIR(raiz.dir, chave)
+    SENAO
+        // chaves iguais não são inseridas (opcional)
+        RETORNA raiz
+    FIMSE
+
+    // 2) Atualiza altura
+    ATUALIZA_ALTURA(raiz)
+
+    // 3) Verifica balanceamento
+    bal ← FATOR_BAL(raiz)
+
+    // Casos de rotação
+    // LL: desbalanceado à esquerda e chave < raiz.esq.valor
+    SE bal > 1 E chave < raiz.esq.valor ENTAO
+        RETORNA ROT_DIR(raiz)
+
+    // RR: desbalanceado à direita e chave > raiz.dir.valor
+    SE bal < -1 E chave > raiz.dir.valor ENTAO
+        RETORNA ROT_ESQ(raiz)
+
+    // LR: desbalanceado à esquerda e chave > raiz.esq.valor
+    SE bal > 1 E chave > raiz.esq.valor ENTAO
+        raiz.esq ← ROT_ESQ(raiz.esq)
+        RETORNA ROT_DIR(raiz)
+
+    // RL: desbalanceado à direita e chave < raiz.dir.valor
+    SE bal < -1 E chave < raiz.dir.valor ENTAO
+        raiz.dir ← ROT_DIR(raiz.dir)
+        RETORNA ROT_ESQ(raiz)
+
+    // 4) Já balanceada
+    RETORNA raiz
