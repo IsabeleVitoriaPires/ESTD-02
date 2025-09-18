@@ -1,78 +1,93 @@
-FUNÇÃO ALTURA(nó):
-    SE nó = NULO ENTAO RETORNA 0
-    SENAO RETORNA nó.altura
+estrutura no:
+    chave    : inteiro
+    esquerda : no
+    direita  : no
+    altura   : inteiro
 
-FUNÇÃO ATUALIZA_ALTURA(nó):
-    nó.altura ← 1 + MÁX(ALTURA(nó.esq), ALTURA(nó.dir))
+FUNÇÃO altura(no):
+    SE no = NULO ENTÃO
+        RETORNA 0
+    SENÃO
+        RETORNA no.altura
 
+FUNÇÃO atualizar_altura(no):
+    SE no = NULO ENTÃO RETORNA
+    altura_esquerda ← altura(no.esquerda)
+    altura_direita  ← altura(no.direita)
+    no.altura ← 1 + MÁXIMO(altura_esquerda, altura_direita)
 
+FUNÇÃO fator_de_balanceamento(no):
+    RETORNA altura(no.esquerda) − altura(no.direita)
 
-FUNÇÃO FATOR_BAL(nó):
-    RETORNA ALTURA(nó.esq) − ALTURA(nó.dir)
+FUNÇÃO rotacionar_para_direita(no):            // caso LL
+    filho_esquerda ← no.esquerda
+    subarvore_direita_do_filho_esquerda ← filho_esquerda.direita
 
+    // girar
+    filho_esquerda.direita ← no
+    no.esquerda ← subarvore_direita_do_filho_esquerda
 
+    // atualizar alturas
+    atualizar_altura(no)
+    atualizar_altura(filho_esquerda)
 
-FUNÇÃO ROT_DIR(y):              // Rotação à direita (LL)
-    x ← y.esq
-    T2 ← x.dir
-    x.dir ← y
-    y.esq ← T2
-    ATUALIZA_ALTURA(y)
-    ATUALIZA_ALTURA(x)
-    RETORNA x
+    RETORNA filho_esquerda
 
+FUNÇÃO rotacionar_para_esquerda(no):           // caso RR
+    filho_direita ← no.direita
+    subarvore_esquerda_do_filho_direita ← filho_direita.esquerda
 
-FUNÇÃO ROT_ESQ(x):              // Rotação à esquerda (RR)
-    y ← x.dir
-    T2 ← y.esq
-    y.esq ← x
-    x.dir ← T2
-    ATUALIZA_ALTURA(x)
-    ATUALIZA_ALTURA(y)
-    RETORNA y
+    // girar
+    filho_direita.esquerda ← no
+    no.direita ← subarvore_esquerda_do_filho_direita
 
+    // atualizar alturas
+    atualizar_altura(no)
+    atualizar_altura(filho_direita)
 
-FUNÇÃO INSERIR(raiz, chave):
-    // 1) Inserção BST padrão
-    SE raiz = NULO ENTAO
-        NOVO ← NÓ(chave)
-        NOVO.esq ← NULO; NOVO.dir ← NULO; NOVO.altura ← 1
-        RETORNA NOVO
+    RETORNA filho_direita
+
+FUNÇÃO inserir(raiz, nova_chave):
+    // inserção padrão de BST
+    SE raiz = NULO ENTÃO
+        novo_no ← NOVO Nó
+        novo_no.chave ← nova_chave
+        novo_no.esquerda ← NULO
+        novo_no.direita  ← NULO
+        novo_no.altura   ← 1
+        RETORNA novo_no
     FIMSE
 
-    SE chave < raiz.valor ENTAO
-        raiz.esq ← INSERIR(raiz.esq, chave)
-    SENAO SE chave > raiz.valor ENTAO
-        raiz.dir ← INSERIR(raiz.dir, chave)
-    SENAO
-        // chaves iguais não são inseridas (opcional)
+    SE nova_chave < raiz.chave ENTÃO
+        raiz.esquerda ← inserir(raiz.esquerda, nova_chave)
+    SENÃO SE nova_chave > raiz.chave ENTÃO
+        raiz.direita ← inserir(raiz.direita, nova_chave)
+    SENÃO
+        // chave repetida: não insere
         RETORNA raiz
     FIMSE
 
-    // 2) Atualiza altura
-    ATUALIZA_ALTURA(raiz)
+    // atualizar altura e verificar balanceamento
+    atualizar_altura(raiz)
+    balanceamento ← fator_de_balanceamento(raiz)
 
-    // 3) Verifica balanceamento
-    bal ← FATOR_BAL(raiz)
+    // LL: pesado à esquerda e inseriu na subárvore esquerda-esquerda
+    SE balanceamento > 1 E nova_chave < raiz.esquerda.chave ENTÃO
+        RETORNA rotacionar_para_direita(raiz)
 
-    // Casos de rotação
-    // LL: desbalanceado à esquerda e chave < raiz.esq.valor
-    SE bal > 1 E chave < raiz.esq.valor ENTAO
-        RETORNA ROT_DIR(raiz)
+    // RR: pesado à direita e inseriu na subárvore direita-direita
+    SE balanceamento < -1 E nova_chave > raiz.direita.chave ENTÃO
+        RETORNA rotacionar_para_esquerda(raiz)
 
-    // RR: desbalanceado à direita e chave > raiz.dir.valor
-    SE bal < -1 E chave > raiz.dir.valor ENTAO
-        RETORNA ROT_ESQ(raiz)
+    // LR: pesado à esquerda e inseriu na subárvore esquerda-direita
+    SE balanceamento > 1 E nova_chave > raiz.esquerda.chave ENTÃO
+        raiz.esquerda ← rotacionar_para_esquerda(raiz.esquerda)
+        RETORNA rotacionar_para_direita(raiz)
 
-    // LR: desbalanceado à esquerda e chave > raiz.esq.valor
-    SE bal > 1 E chave > raiz.esq.valor ENTAO
-        raiz.esq ← ROT_ESQ(raiz.esq)
-        RETORNA ROT_DIR(raiz)
+    // RL: pesado à direita e inseriu na subárvore direita-esquerda
+    SE balanceamento < -1 E nova_chave < raiz.direita.chave ENTÃO
+        raiz.direita ← rotacionar_para_direita(raiz.direita)
+        RETORNA rotacionar_para_esquerda(raiz)
 
-    // RL: desbalanceado à direita e chave < raiz.dir.valor
-    SE bal < -1 E chave < raiz.dir.valor ENTAO
-        raiz.dir ← ROT_DIR(raiz.dir)
-        RETORNA ROT_ESQ(raiz)
-
-    // 4) Já balanceada
+    // já balanceada
     RETORNA raiz
